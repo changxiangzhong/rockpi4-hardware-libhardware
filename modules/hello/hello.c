@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define DEVICE_NAME "/dev/hello"
 #define MODULE_NAME "Hello"
