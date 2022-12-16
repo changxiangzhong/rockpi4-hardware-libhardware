@@ -3,5 +3,6 @@ hardware_modules := \
     gralloc \
     sensors \
     hw_output \
-	hello
+	hello \
+	emmc_doc
 include $(call all-named-subdir-makefiles,$(hardware_modules))
