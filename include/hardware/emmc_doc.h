@@ -39,6 +39,9 @@ struct emmc_doc_device_t {
      * 0x01 0x03
      */
 	int (*get_life_time)(struct emmc_doc_device_t* dev, int* mlc, int* slc);
+    // Helper methoeds derived from above
+	int (*get_slc_life)(struct emmc_doc_device_t* dev, int* slc);
+	int (*get_mlc_life)(struct emmc_doc_device_t* dev, int* mlc);
     /*
      * dciw387get:/sys/class/mmc_host/mmc1/mmc1:0001 # xxd name
      * 00000000: 4838 4734 6192 0a                        H8G4a..

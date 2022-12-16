@@ -1,5 +1,5 @@
 
-#define LOG_TAG "EMMC_DOC"
+#define LOG_TAG "EMMC_DOC_HAL"
 
 #include <hardware/hardware.h>
 #include <hardware/emmc_doc.h>
@@ -26,6 +26,8 @@ static int emmc_doc_device_close(struct hw_device_t* device);
 
 /* Device accessing interface */
 static int emmc_doc_device_get_life_time(struct emmc_doc_device_t* dev, int* mlc, int* slc);
+static int emmc_doc_device_get_slc_life_time(struct emmc_doc_device_t* dev, int* slc);
+static int emmc_doc_device_get_mlc_life_time(struct emmc_doc_device_t* dev, int* mlc);
 
 /* Init module method table */
 static struct hw_module_methods_t module_methods = {
@@ -61,6 +63,8 @@ static int emmc_doc_device_open(const struct hw_module_t* module, const char* na
     dev->common.module = (hw_module_t*)module;
     dev->common.close = emmc_doc_device_close;
     dev->get_life_time = &emmc_doc_device_get_life_time;
+    dev->get_slc_life = &emmc_doc_device_get_slc_life_time;
+    dev->get_mlc_life = &emmc_doc_device_get_mlc_life_time;
     
     if ((dev->life_fd = open(EMMC_LIFE_TIME, O_WRONLY)) == -1) {
         ALOGE("EMMC_DOC::device_open(): failed to open LKM file %s with error %s",
@@ -85,6 +89,7 @@ static int emmc_doc_device_close(struct hw_device_t* device) {
     ALOGI("EMMC_DOC::device_close() succeeded");
 	return 0;
 }
+
 
 //Sample:
 // OnePlace2:/sys/class/mmc_host/mmc1/mmc1:0001 # cat life_time
@@ -119,4 +124,14 @@ failure_handling:
     *mlc = 0;
     *slc = 0;
     return -EFAULT;
+}
+
+static int emmc_doc_device_get_slc_life_time(struct emmc_doc_device_t* dev, int* slc) {
+    int place_holder;
+    return emmc_doc_device_get_life_time(dev, &place_holder, slc);
+}
+
+static int emmc_doc_device_get_mlc_life_time(struct emmc_doc_device_t* dev, int* mlc) {
+    int place_holder;
+    return emmc_doc_device_get_life_time(dev, mlc, &place_holder);
 }
