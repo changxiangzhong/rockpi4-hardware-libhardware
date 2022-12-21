@@ -12,6 +12,10 @@
 #include <string.h>
 #include <unistd.h>
 
+// Tested on the following EMMC
+//  * Rockpi 4B
+//  * OP2
+//  * GET1
 #define EMMC_LIFE_TIME      "/sys/class/mmc_host/mmc1/mmc1:0001/life_time"
 //#define EMMC_PRE_EOL        "/sys/class/mmc_host/mmc1/mmc1:0001/pre_eol_info"
 //#define EMMC_NAME           "/sys/class/mmc_host/mmc1/mmc1:0001/name"
