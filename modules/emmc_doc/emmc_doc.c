@@ -57,7 +57,7 @@ static int emmc_doc_device_open(const struct hw_module_t* module, const char* na
     struct emmc_doc_device_t* dev = (struct emmc_doc_device_t*) malloc(sizeof(struct emmc_doc_device_t));
     
     if (!dev) {
-        ALOGE("EMMC_DOC::device_open(): failed to allocate ram, name = %s ", name);
+        ALOGE("device_open(): failed to allocate ram, name = %s ", name);
         return -EFAULT;
     }
 
@@ -70,8 +70,8 @@ static int emmc_doc_device_open(const struct hw_module_t* module, const char* na
     dev->get_slc_life = &emmc_doc_device_get_slc_life_time;
     dev->get_mlc_life = &emmc_doc_device_get_mlc_life_time;
     
-    if ((dev->life_fd = open(EMMC_LIFE_TIME, O_WRONLY)) == -1) {
-        ALOGE("EMMC_DOC::device_open(): failed to open LKM file %s with error %s",
+    if ((dev->life_fd = open(EMMC_LIFE_TIME, O_RDONLY)) == -1) {
+        ALOGE("device_open(): failed to open LKM file %s with error %s",
                 EMMC_LIFE_TIME,
                 strerror(errno));
         free(dev);
@@ -79,7 +79,7 @@ static int emmc_doc_device_open(const struct hw_module_t* module, const char* na
     }
 
     *device = &(dev->common);
-    ALOGI("EMMC_DOC::device_open() succeeded");
+    ALOGI("device_open() succeeded, fd = %d", dev->life_fd);
 	return 0;
 }
 
@@ -90,7 +90,7 @@ static int emmc_doc_device_close(struct hw_device_t* device) {
         close(dev->life_fd);
         free(dev);
     }
-    ALOGI("EMMC_DOC::device_close() succeeded");
+    ALOGI("device_close() succeeded");
 	return 0;
 }
 
@@ -99,29 +99,32 @@ static int emmc_doc_device_close(struct hw_device_t* device) {
 // OnePlace2:/sys/class/mmc_host/mmc1/mmc1:0001 # cat life_time
 // 0x01 0x01
 static int emmc_doc_device_get_life_time(struct emmc_doc_device_t* dev, int* mlc, int* slc) {
-    char char_line[9];
+    char char_line[10];
     int ret = 0;
     if (!mlc) {
-        ALOGE("EMMC_DOC::get_life_time() failed. mlc == 0");
+        ALOGE("get_life_time() failed. mlc == 0");
         return -EFAULT;
     }
     if (!slc) {
-        ALOGE("EMMC_DOC::get_life_time() failed. slc == 0");
+        ALOGE("get_life_time() failed. slc == 0");
         return -EFAULT;
     }
     memset(char_line, 0, sizeof(char_line));
+    ALOGI("emmc_doc_device_get_life_time(), fd = %d", dev->life_fd);
     if ((ret = read(dev->life_fd, char_line, sizeof(char_line)) < 0)) {
-        ALOGE("EMMC_DOC::get_life_time() failed when reading device file with error %s", strerror(errno));
+        ALOGE("get_life_time() failed when reading device file with error %s", strerror(errno));
         goto failure_handling;
-    } else if (ret != 9) {
-        ALOGE("EMMC_DOC::get_life_time() failed to read %d bytes", (int)sizeof(char_line));
+    } else if (ret != 0) { // Error
+        ALOGE("get_life_time() failed. read() return %d, with error %s", ret, strerror(errno));
+        ALOGI("device_get_life_time(), device_file = %s\n", char_line);
         goto failure_handling;
     }
-    ALOGI("EMMC_DOC::device_get_life_time(), device_file = %s", char_line);
+    ALOGI("device_get_life_time(), device_file = %s\n", char_line);
 
     char* left_over;
-    *slc = (int)strtol(char_line, &left_over, 0);
-    *mlc = (int)strtol(left_over, NULL, 0);
+    *mlc = (int)strtol(char_line, &left_over, 0);
+    *slc = (int)strtol(left_over, NULL, 0);
+    ALOGI("emmc_doc_device_get_life_time(), mlc = %d, slc = %d\n", *mlc, *slc);
 	return 0;
 
 failure_handling:
